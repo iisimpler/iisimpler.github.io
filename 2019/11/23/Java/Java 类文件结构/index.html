@@ -1,0 +1,472 @@
+<!DOCTYPE html><html lang="zh-Hans"><head><meta name="generator" content="Hexo 3.9.0"><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="Java 类文件结构"><meta name="keywords" content="Java,JVM,类结构"><meta name="author" content="maximpler,undefined"><meta name="copyright" content="maximpler"><title>Java 类文件结构 | 收集时光</title><link rel="shortcut icon" href="../../../../../assets/favicon.ico"><link rel="stylesheet" href="../../../../../css/index.css?version=1.5.6"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css?version=1.5.6"><link rel="dns-prefetch" href="https://cdn.staticfile.org"><link rel="dns-prefetch" href="https://cdn.bootcss.com"><link rel="dns-prefetch" href="https://creativecommons.org"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/gh/upupming/gitalk@36368e5dffd049e956cdbbd751ff96c28d8255cf/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://hm.baidu.com"><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?f42ff98225cab676fe8be6ed53119c03";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();</script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-131733576-1', 'auto');
+ga('send', 'pageview');</script><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"search.xml","languages":{"hits_empty":"找不到您查询的内容:${query}"}},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  }
+} </script></head><body><canvas class="fireworks"></canvas><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar"><div class="toggle-sidebar-info text-center"><span data-toggle="切换文章详情">切换站点概览</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">目录</div><div class="sidebar-toc__progress"><span class="progress-notice">你已经读了</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Java-类文件结构"><span class="toc-number">1.</span> <span class="toc-text">Java 类文件结构</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#定义"><span class="toc-number">1.1.</span> <span class="toc-text">定义</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ClassFile-结构"><span class="toc-number">1.2.</span> <span class="toc-text">ClassFile 结构</span></a></li></ol></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="/assets/avatar.png"></div><div class="author-info__name text-center">maximpler</div><div class="author-info__description text-center"></div><div class="follow-button"><a href="https://github.com/iisimpler" target="_blank">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="../../../../../archives"><span class="pull-left">文章</span><span class="pull-right">13</span></a><a class="author-info-articles__tags article-meta" href="../../../../../tags"><span class="pull-left">标签</span><span class="pull-right">27</span></a><a class="author-info-articles__categories article-meta" href="../../../../../categories"><span class="pull-left">分类</span><span class="pull-right">6</span></a></div></div></div><div id="content-outer"><div class="no-bg" id="top-container" style="background-image: url(true)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="../../../../../index.html">收集时光</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> 搜索</span></a><a class="site-page" href="/">主页</a><a class="site-page" href="/archives">总览</a><a class="site-page" href="/tags">标签</a><a class="site-page" href="/categories">分类</a><a class="site-page" href="/slides">幻灯片</a><a class="site-page" href="/gallery">相册</a></span></div><div id="post-info"><div id="post-title">Java 类文件结构</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2019-11-23</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="../../../../../categories/Java/">Java</a><div class="post-meta-wordcount"><span>字数总计: </span><span class="word-count">4.3k</span><span class="post-meta__separator">|</span><span>阅读时长: 16 分钟</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h1 id="Java-类文件结构"><a href="#Java-类文件结构" class="headerlink" title="Java 类文件结构"></a>Java 类文件结构</h1><blockquote>
+<p>代码编译的结果从本地机器码转变为字节码，是存储格式发展的一小步，却是编程语言发展的一大步。</p>
+</blockquote>
+<p>Java 虚拟机在<strong>字节码格式</strong>标准的基础上对下实现了平台无关性，对上实现了语言无关性。所以Java 规范文档分为 Java 语言规范《The Java Language Specification》和Java 虚拟机规范《The Java Virtual Machine Specification》。</p>
+<h2 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h2><p>Class 文件是一组以 8 字节为基础单位的二进制流，各个数据项目严格按照顺序紧凑地排列在 Class 文件之中，当某个数据项超过 8 字节时则按照高位（Big-Endian）在前的方式分隔若干个 8 字节存储。</p>
+<p>Class 文件结构分为两种数据类型：</p>
+<ul>
+<li><p>无符号数<br>无符号数属于基本的数据类型，用来描述数字、索引引用、常量值或者按照 UTF-8 编码构成的字符串值。以u1、u2、u4、u8 来分别代表 1 个字节、2 个字节、4 个字节和 8 个字节的无符号数。</p>
+</li>
+<li><p>表<br>表是由多个无符号数或者其他表作为数据项构成的复合数据类型，所有表都以“_info”结尾。整个 Class 文件本质上是一张表。</p>
+</li>
+</ul>
+<p>无论是无符号数还是表，当需要描述同一类型但数量不定的多个数据时会使用一个前置的容量计数器加若干个连续的数据项形式，这时称这一系列的数据为某一类型的集合。</p>
+<h2 id="ClassFile-结构"><a href="#ClassFile-结构" class="headerlink" title="ClassFile 结构"></a>ClassFile 结构</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">ClassFile &#123;</span><br><span class="line">    u4             magic;</span><br><span class="line">    u2             minor_version;</span><br><span class="line">    u2             major_version;</span><br><span class="line">    u2             constant_pool_count;</span><br><span class="line">    cp_info        constant_pool[constant_pool_count-1];</span><br><span class="line">    u2             access_flags;</span><br><span class="line">    u2             this_class;</span><br><span class="line">    u2             super_class;</span><br><span class="line">    u2             interfaces_count;</span><br><span class="line">    u2             interfaces[interfaces_count];</span><br><span class="line">    u2             fields_count;</span><br><span class="line">    field_info     fields[fields_count];</span><br><span class="line">    u2             methods_count;</span><br><span class="line">    method_info    methods[methods_count];</span><br><span class="line">    u2             attributes_count;</span><br><span class="line">    attribute_info attributes[attributes_count];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>magic</li>
+</ul>
+<p>Magic 唯一作用是确定这个文件是否为一个能被虚拟机所接受的 Class 文件。魔数值固定为 <code>0xCAFEBABE</code>，不会改变。</p>
+<ul>
+<li>minor_version 和 major_version</li>
+</ul>
+<p>minor_version 和 major_version 值分别表示 Class 文件的副、主版本。高版本 JDK 向下兼容低版本 Class 文件。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># Java 版本号是从 45 开始的</span><br><span class="line">JDK 					1.0~1.1				1.2		1.3		1.4		1.5		1.6		1.7		1.8</span><br><span class="line">major_version 45.0~45.3 		46		47		48		49		50		51		52</span><br></pre></td></tr></table></figure>
+<ul>
+<li>constant_pool</li>
+</ul>
+<p>常量池是 Class 文件的常量统一存放的表类型数据项目。以一个 u2 类型的数据存储常量池容量计数值（constant_pool_count），后续紧跟常量池，常量从 1 开始（0 表示不引用任何常量）。</p>
+<p>常量池中主要存放两类常量， 字面量（Literal）和符号引用（Symbolic Reference）。字面量接近 Java 语言层面的常量概念，如文本字符串、声明为 final 的常数值。符号引用<br>编译原理方面的概念，包括<strong>类和接口的全限定名（Fully Qualified Name）</strong>，<strong>字段的名称和描述符（Descriptor）</strong>， <strong>方法的名称和描述符</strong>。</p>
+<p>每个常量都具有如下结构：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">cp_info &#123;</span><br><span class="line">    u1 tag;</span><br><span class="line">    u1 info[];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>Constant Type</th>
+<th>Value</th>
+<th>description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>CONSTANT_Utf8</code></td>
+<td>1</td>
+<td>UTF-8编码的字符串</td>
+</tr>
+<tr>
+<td><code>CONSTANT_Integer</code></td>
+<td>3</td>
+<td>整形字面量</td>
+</tr>
+<tr>
+<td><code>CONSTANT_Float</code></td>
+<td>4</td>
+<td>浮点型字面量</td>
+</tr>
+<tr>
+<td><code>CONSTANT_Long</code></td>
+<td>5</td>
+<td>长整型字面量</td>
+</tr>
+<tr>
+<td><code>CONSTANT_Double</code></td>
+<td>6</td>
+<td>双精度浮点型字面量</td>
+</tr>
+<tr>
+<td><code>CONSTANT_Class</code></td>
+<td>7</td>
+<td>类或接口的符号引用</td>
+</tr>
+<tr>
+<td><code>CONSTANT_String</code></td>
+<td>8</td>
+<td>字符串类型字面量</td>
+</tr>
+<tr>
+<td><code>CONSTANT_Fieldref</code></td>
+<td>9</td>
+<td>字段的符号引用</td>
+</tr>
+<tr>
+<td><code>CONSTANT_Methodref</code></td>
+<td>10</td>
+<td>类中方法的符号引用</td>
+</tr>
+<tr>
+<td><code>CONSTANT_InterfaceMethodref</code></td>
+<td>11</td>
+<td>接口中方法的符号引用</td>
+</tr>
+<tr>
+<td><code>CONSTANT_NameAndType</code></td>
+<td>12</td>
+<td>字段或方法的部分符号引用</td>
+</tr>
+<tr>
+<td><code>CONSTANT_MethodHandle</code></td>
+<td>15</td>
+<td>表示方法句柄</td>
+</tr>
+<tr>
+<td><code>CONSTANT_MethodType</code></td>
+<td>16</td>
+<td>标识方法句柄</td>
+</tr>
+<tr>
+<td><code>CONSTANT_InvokeDynamic</code></td>
+<td>18</td>
+<td>标识一个动态方法调用点</td>
+</tr>
+</tbody>
+</table>
+</div>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br></pre></td><td class="code"><pre><span class="line">CONSTANT_Utf8_info &#123;</span><br><span class="line">    u1 tag;						// tag=1</span><br><span class="line">    u2 length;				// 字节长度，2字节最大存储65535长度，也就限制了最大存储字符串常量为64K</span><br><span class="line">    u1 bytes[length];	// 字节数组，采用 UTF-8 缩略编码（用 1~3 字节来表示）。</span><br><span class="line">// 缩略编码和标准的 UTF-8 编码区别：</span><br><span class="line">// 第一：前者用双字节格式编码表示 &apos;null&apos; 而不是单字节</span><br><span class="line">// 第二：前者在表示 4 字节字符时用两个三字节格式代替</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">CONSTANT_Integer_info &#123;</span><br><span class="line">    u1 tag;			// tag=3</span><br><span class="line">    u4 bytes;		// 表示int常量的值</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">CONSTANT_Float_info &#123;</span><br><span class="line">    u1 tag;			// tag=4</span><br><span class="line">    u4 bytes;		// 表示float常量的值，采用IEEE 754单精度浮点格式</span><br><span class="line">// 首先将 bytes 转换为 int 常量的 bits：</span><br><span class="line">// 如果 bits=0x7f800000, float值=正无穷大；</span><br><span class="line">// 如果 bits=0xff800000, float值=负无穷大；</span><br><span class="line">// 如果 bits范围为 0x7f800000~0x7fffffff和0xff800001~0xfffffff, float值为NaN</span><br><span class="line">// 其他情况下，根据以下方式计算</span><br><span class="line">// int s = ((bits &gt;&gt; 31) == 0) ? 1 : -1;</span><br><span class="line">// int e = ((bits &gt;&gt; 23) &amp; 0xff);</span><br><span class="line">// int m = (e == 0) ? (bits &amp; 0x7fffff) &lt;&lt; 1 : (bits &amp; 0x7fffff) | 0x800000;</span><br><span class="line">// float值 = s·m·2^(e-150)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">// 在 class 文件的常量池表中，所有 8 字节常量均占用两个表成员的空间，只占用第一个，第二个必须不可用</span><br><span class="line">CONSTANT_Long_info &#123;</span><br><span class="line">    u1 tag;					// tag=5</span><br><span class="line">    u4 high_bytes;	// 表示Long常量的高位</span><br><span class="line">    u4 low_bytes;		// 表示Long常量的低位</span><br><span class="line">// Long值 = ((long)high_bytes &lt;&lt; 32) + low_bytes</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">CONSTANT_Double_info &#123;</span><br><span class="line">    u1 tag;					// tag=6</span><br><span class="line">    u4 high_bytes;	// 表示Double常量的高位，采用IEEE 754双精度浮点格式</span><br><span class="line">    u4 low_bytes;		// 表示Double常量的低位，采用IEEE 754双精度浮点格式</span><br><span class="line">// Double值 = ((long)high_bytes &lt;&lt; 32) + low_bytes</span><br><span class="line">// 如果 bits=0x7ff0000000000000L, double值=正无穷大</span><br><span class="line">// 如果 bits=0xfff0000000000000L, double值=负无穷大</span><br><span class="line">// 如果 bits范围在0x7ff0000000000001L~0x7fffffffffffffffL 或者 0xfff0000000000001L~0xffffffffffffffffL，double值为NaN</span><br><span class="line">// 其他情况下，根据以下方式计算</span><br><span class="line">// int s = ((bits &gt;&gt; 63) == 0) ? 1 : -1;</span><br><span class="line">// int e = (int)((bits &gt;&gt; 52) &amp; 0x7ffL);</span><br><span class="line">// long m = (e == 0) ?</span><br><span class="line">//           (bits &amp; 0xfffffffffffffL) &lt;&lt; 1 :</span><br><span class="line">//           (bits &amp; 0xfffffffffffffL) | 0x10000000000000L;</span><br><span class="line">// double值 = s·m·2^(e-1075)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">CONSTANT_Class_info &#123;</span><br><span class="line">    u1 tag; 				// tag=7</span><br><span class="line">    u2 name_index; 	// 常量池索引，索引处必须是CONSTANT_Utf8_info结构表示类名或接口名</span><br><span class="line">    								// 二维数组int[][]类名表示为 [[I，维度必须小于等于 255</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">CONSTANT_String_info &#123;</span><br><span class="line">    u1 tag;						// tag=8</span><br><span class="line">    u2 string_index;	// 常量池索引，索引处必须是CONSTANT_Utf8_info表示字符串常量对象</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">CONSTANT_Fieldref_info &#123;</span><br><span class="line">    u1 tag;									// tag=9</span><br><span class="line">    u2 class_index;					// 常量池索引，索引处必须是CONSTANT_Class_info结构表示类或接口</span><br><span class="line">    u2 name_and_type_index;	// 常量池索引，索引处必须是CONSTANT_NameAndType_info结构表示字段描述符</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">CONSTANT_Methodref_info &#123;</span><br><span class="line">    u1 tag;									// tag=10</span><br><span class="line">    u2 class_index;					// 常量池索引，索引处必须是CONSTANT_Class_info结构表示类</span><br><span class="line">    u2 name_and_type_index;	// 常量池索引，索引处必须是CONSTANT_NameAndType_info结构表示方法描述符</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">CONSTANT_InterfaceMethodref_info &#123;</span><br><span class="line">    u1 tag;									// tag=11</span><br><span class="line">    u2 class_index;					// 常量池索引，索引处必须是CONSTANT_Class_info结构表示接口</span><br><span class="line">    u2 name_and_type_index;	// 常量池索引，索引处必须是CONSTANT_NameAndType_info结构表示方法描述符</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">CONSTANT_NameAndType_info &#123;</span><br><span class="line">    u1 tag;									// tag=12</span><br><span class="line">    u2 name_index;					// 常量池索引，索引处必须是CONSTANT_Utf8_info结构表示方法或者字段的非限定名</span><br><span class="line">    u2 descriptor_index;		// 常量池索引，索引处必须是CONSTANT_Utf8_info结构表示字段描述符和方法描述符</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">CONSTANT_MethodHandle_info &#123;</span><br><span class="line">    u1 tag;								// tag=15</span><br><span class="line">    u1 reference_kind;		// 表示方法句柄类型 1~9</span><br><span class="line">    u2 reference_index;		// 常量池索引，索引处结构要求见下表</span><br><span class="line">&#125;</span><br><span class="line">// 方法句柄类型 1~9</span><br><span class="line">// 1		REF_getField			getfield C.f:T</span><br><span class="line">// 2		REF_getStatic			getstatic C.f:T</span><br><span class="line">// 3		REF_putField			putfield C.f:T</span><br><span class="line">// 4		REF_putStatic			putstatic C.f:T</span><br><span class="line">// 5		REF_invokeVirtual		invokevirtual C.m:(A*)T</span><br><span class="line">// 6		REF_invokeStatic		invokestatic C.m:(A*)T</span><br><span class="line">// 7		REF_invokeSpecial		invokespecial C.m:(A*)T</span><br><span class="line">// 8		REF_newInvokeSpecial	new C; dup; invokespecial C.&lt;init&gt;:(A*)V</span><br><span class="line">// 9		REF_invokeInterface		invokeinterface C.m:(A*)T</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">CONSTANT_MethodType_info &#123;</span><br><span class="line">    u1 tag;								// tag=16</span><br><span class="line">    u2 descriptor_index;	// 常量池索引，索引处必须是CONSTANT_Utf8_info结构表示方法的描述符</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">CONSTANT_InvokeDynamic_info &#123;</span><br><span class="line">    u1 tag;													// tag=18</span><br><span class="line">    u2 bootstrap_method_attr_index;	// 对引导方法表的bootstrap_methods数组的索引</span><br><span class="line">    u2 name_and_type_index;					// 常量池索引，索引处必须是CONSTANT_NameAndType_info</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>access_flags</li>
+</ul>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>Flag名称</th>
+<th>值</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ACC_PUBLIC</code></td>
+<td>0x0001</td>
+<td>声明为 public， 可以用包外访问</td>
+</tr>
+<tr>
+<td><code>ACC_FINAL</code></td>
+<td>0x0010</td>
+<td>声明为 final，不允许有子类</td>
+</tr>
+<tr>
+<td><code>ACC_SUPER</code></td>
+<td>0x0020</td>
+<td>当用到 invokespecial 指令时，需要对父类方法做特殊处理，必须为真</td>
+</tr>
+<tr>
+<td><code>ACC_INTERFACE</code></td>
+<td>0x0200</td>
+<td>该 class 文件定义的是接口而不是类</td>
+</tr>
+<tr>
+<td><code>ACC_ABSTRACT</code></td>
+<td>0x0400</td>
+<td>声明为 abstract，不能被实例化</td>
+</tr>
+<tr>
+<td><code>ACC_SYNTHETIC</code></td>
+<td>0x1000</td>
+<td>声明为 synthetic， 表示该 class 文件并非由 Java 源代码所生成</td>
+</tr>
+<tr>
+<td><code>ACC_ANNOTATION</code></td>
+<td>0x2000</td>
+<td>标识注解类型</td>
+</tr>
+<tr>
+<td><code>ACC_ENUM</code></td>
+<td>0x4000</td>
+<td>标识枚举类型</td>
+</tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>this_class</li>
+</ul>
+<p>类索引（this class）用于确定当前类的全限定名。常量池索引，索引处必须是CONSTANT_Class_info结构。</p>
+<ul>
+<li>super_class</li>
+</ul>
+<p>父类索引（super_class）用于确定当前类的父类全限定名。常量池索引，索引处必须是CONSTANT_Class_info结构。</p>
+<ul>
+<li>interfaces</li>
+</ul>
+<p>接口表（interfaces）描述当前类所实现的接口集合。每个成员必须是常量池索引，索引处必须是CONSTANT_Class_info结构。</p>
+<ul>
+<li>fields</li>
+</ul>
+<p>字段表（fields）描述当前类或接口中某个字段的完整描述。每个成员必须是常量池索引，索引处必须是fields_info结构。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">field_info &#123;</span><br><span class="line">    u2             access_flags;</span><br><span class="line">    u2             name_index;	//常量池索引，索引处必须是CONSTANT_Utf8_info结构表示非限定名</span><br><span class="line">    u2             descriptor_index;//常量池索引，索引处必须是CONSTANT_Utf8_info结构表示字段描述符</span><br><span class="line">    u2             attributes_count;</span><br><span class="line">    attribute_info attributes[attributes_count];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>access_flags</th>
+<th>value</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ACC_PUBLIC</code></td>
+<td>0x0001</td>
+<td>声明为<code>public</code>，可以从包外访问</td>
+</tr>
+<tr>
+<td><code>ACC_PRIVATE</code></td>
+<td>0x0002</td>
+<td>声明为<code>private</code>，只能在定义该字段的类中访问</td>
+</tr>
+<tr>
+<td><code>ACC_PROTECTED</code></td>
+<td>0x0004</td>
+<td>声明为<code>protected</code>，可以在子类中访问</td>
+</tr>
+<tr>
+<td><code>ACC_STATIC</code></td>
+<td>0x0008</td>
+<td>声明为<code>static</code>.</td>
+</tr>
+<tr>
+<td><code>ACC_FINAL</code></td>
+<td>0x0010</td>
+<td>声明为<code>final</code>，对象构造好后就不能直接设置该字段了</td>
+</tr>
+<tr>
+<td><code>ACC_VOLATILE</code></td>
+<td>0x0040</td>
+<td>声明为<code>volatile</code>，被标识的字段无法缓存</td>
+</tr>
+<tr>
+<td><code>ACC_TRANSIENT</code></td>
+<td>0x0080</td>
+<td>声明为<code>transient</code>，被标识的字段不会被持久化管理器所读取或写入</td>
+</tr>
+<tr>
+<td><code>ACC_SYNTHETIC</code></td>
+<td>0x1000</td>
+<td>声明为synthetic，不是源代码提供的，是由编译器自动产生的</td>
+</tr>
+<tr>
+<td><code>ACC_ENUM</code></td>
+<td>0x4000</td>
+<td>声明为某个枚举类型</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th><em>FieldType</em> term</th>
+<th>Type</th>
+<th>Interpretation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>B</code></td>
+<td><code>byte</code></td>
+<td>signed byte</td>
+</tr>
+<tr>
+<td><code>C</code></td>
+<td><code>char</code></td>
+<td>基于多文种的 Unicode 字符码点，UTF-16 编码</td>
+</tr>
+<tr>
+<td><code>D</code></td>
+<td><code>double</code></td>
+<td>双精度浮点数</td>
+</tr>
+<tr>
+<td><code>F</code></td>
+<td><code>float</code></td>
+<td>单精度浮点数</td>
+</tr>
+<tr>
+<td><code>I</code></td>
+<td><code>int</code></td>
+<td>整型数</td>
+</tr>
+<tr>
+<td><code>J</code></td>
+<td><code>long</code></td>
+<td>长整型</td>
+</tr>
+<tr>
+<td><code>L</code> <em>ClassName</em> <code>;</code></td>
+<td><code>reference</code></td>
+<td><em>ClassName</em> 的实例</td>
+</tr>
+<tr>
+<td><code>S</code></td>
+<td><code>short</code></td>
+<td>signed short</td>
+</tr>
+<tr>
+<td><code>Z</code></td>
+<td><code>boolean</code></td>
+<td>布尔值 true/false</td>
+</tr>
+<tr>
+<td><code>[</code></td>
+<td><code>reference</code></td>
+<td>one array dimension</td>
+</tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>methods</li>
+</ul>
+<p>方法表（methods）用于表示当前类或接口中某个方法的完整描述。每个成员必须是常量池索引，索引处必须是method_info结构。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">method_info &#123;</span><br><span class="line">    u2             access_flags;</span><br><span class="line">    u2             name_index;//常量池索引，索引处必须是CONSTANT_Utf8_info结构表示非限定名</span><br><span class="line">    u2             descriptor_index;//常量池索引，索引处必须是CONSTANT_Utf8_info结构表示方法描述符</span><br><span class="line">    u2             attributes_count;</span><br><span class="line">    attribute_info attributes[attributes_count];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>access_flags</th>
+<th>value</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ACC_PUBLIC</code></td>
+<td>0x0001</td>
+<td>声明为<code>public</code>，可以从包外访问</td>
+</tr>
+<tr>
+<td><code>ACC_PRIVATE</code></td>
+<td>0x0002</td>
+<td>声明为<code>private</code>，只能在定义该字段的类中访问</td>
+</tr>
+<tr>
+<td><code>ACC_PROTECTED</code></td>
+<td>0x0004</td>
+<td>声明为<code>protected</code>，可以在子类中访问</td>
+</tr>
+<tr>
+<td><code>ACC_STATIC</code></td>
+<td>0x0008</td>
+<td>声明为<code>static</code></td>
+</tr>
+<tr>
+<td><code>ACC_FINAL</code></td>
+<td>0x0010</td>
+<td>声明为<code>final</code>，不能被覆盖</td>
+</tr>
+<tr>
+<td><code>ACC_SYNCHRONIZED</code></td>
+<td>0x0020</td>
+<td>声明为 <code>synchronized</code>; 该方法将被包装在同步锁里</td>
+</tr>
+<tr>
+<td><code>ACC_BRIDGE</code></td>
+<td>0x0040</td>
+<td>声明为 bridge，由编译器生成的泛型桥接方法</td>
+</tr>
+<tr>
+<td><code>ACC_VARARGS</code></td>
+<td>0x0080</td>
+<td>声明方法带有变长参数</td>
+</tr>
+<tr>
+<td><code>ACC_NATIVE</code></td>
+<td>0x0100</td>
+<td>声明为 <code>native</code>，不是由 java 实现</td>
+</tr>
+<tr>
+<td><code>ACC_ABSTRACT</code></td>
+<td>0x0400</td>
+<td>声明为 <code>abstract</code>，没有实现</td>
+</tr>
+<tr>
+<td><code>ACC_STRICT</code></td>
+<td>0x0800</td>
+<td>声明为 <code>strictfp</code>; 使用 FP-strict 浮点模式</td>
+</tr>
+<tr>
+<td><code>ACC_SYNTHETIC</code></td>
+<td>0x1000</td>
+<td>编译器合成而不是源代码提供的</td>
+</tr>
+</tbody>
+</table>
+</div>
+<ul>
+<li>attributes</li>
+</ul>
+<p>属性表（attributes）描述</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">attribute_info &#123;</span><br><span class="line">    u2 attribute_name_index;//常量池索引，索引处必须是CONSTANT_Utf8_info结构表示无符号引用</span><br><span class="line">    u4 attribute_length;</span><br><span class="line">    u1 info[attribute_length];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+ <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">ConstantValue 是定长属性， 表示一个被static修饰字段常量表达式的值，位于字段属性表中</span><br><span class="line"></span><br><span class="line">ConstantValue_attribute &#123;</span><br><span class="line">    u2 attribute_name_index; // 常量池索引，索引处必须是CONSTANT_Utf8_info，用于表示字符串 “ConstantValue”</span><br><span class="line">    u4 attribute_length;     // 固定为2</span><br><span class="line">    u2 constantvalue_index;  // 常量池索引，索引处必须是CONSTANT_Utf8_info，表示当前常量的值（Entry Type）</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"> Field Type                     Entry Type</span><br><span class="line"> long                             CONSTANT_Long</span><br><span class="line"> float                          CONSTANT_Float</span><br><span class="line"> double                         CONSTANT_Double</span><br><span class="line"> int, short, char, byte, boolean  CONSTANT_Integer</span><br><span class="line"> String                         CONSTANT_String</span><br></pre></td></tr></table></figure>
+<hr>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">Code属性是变长属性，包含某个方法、实例初始化方法、类或接口初始化方法的Java虚拟机指令及相关辅助信息，位于方法属性表中</span><br><span class="line">如果方法被被abstract、native修饰，不能有code属性</span><br><span class="line">Code_attribute &#123;</span><br><span class="line">    u2 attribute_name_index;         // 常量池索引，常量池索引，索引处必须是CONSTANT_Utf8_info，用于表示字符串 “Code”</span><br><span class="line">    u4 attribute_length;             // 属性长度</span><br><span class="line">    u2 max_stack;                    // 当前方法栈在方法执行过程中任何时间点的最大深度</span><br><span class="line">    u2 max_locals;                   // 当前方法局部变量的个数，包括该方法的形参</span><br><span class="line">    u4 code_length;                  // 当前方法字节数组长度，必须大于0，也就是code[]数组不能为空</span><br><span class="line">    u1 code[code_length];            // 当前方法字节数组</span><br><span class="line">    u2 exception_table_length;       // 异常表数量</span><br><span class="line">    &#123;   u2 start_pc;                 // start_pc 和 end_pc 表明了异常处理器在 code[] 中的有效范围</span><br><span class="line">        u2 end_pc;</span><br><span class="line">        u2 handler_pc;               // 异常处理的起点，code[]中的有效索引</span><br><span class="line">        u2 catch_type;               // 如果 catch_type 不为0，则必须是常量池索引，该索引处必须是 CONSTANT_Class_info 结构用于表示异常捕捉类型</span><br><span class="line">                                     // 如果 catch_type 为0， 所有异常都将调用这个异常处理器，可用于实现finally语句</span><br><span class="line">    &#125; exception_table[exception_table_length];   // 异常表数组</span><br><span class="line">    u2 attributes_count;                         // code属性数量</span><br><span class="line">    attribute_info attributes[attributes_count]; // 属性数组</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">StackMapTable 属性是变长属性，用于虚拟机的类型检查验证阶段，位于AttributeCode中</span><br><span class="line"></span><br><span class="line">StackMapTable_attribute &#123;</span><br><span class="line">    u2              attribute_name_index;        // 常量池索引，索引处必须是CONSTANT_Utf8_info，用于表示字符串 “StackMapTable”</span><br><span class="line">    u4              attribute_length;            // 属性长度</span><br><span class="line">    u2              number_of_entries;           // entries个数</span><br><span class="line">    stack_map_frame entries[number_of_entries];  // 栈映射帧数组，顺序很重要</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Exceptions_attribute &#123;</span><br><span class="line">    u2 attribute_name_index;     // 常量池索引，索引处必须是CONSTANT_Utf8_info，用于表示字符串 “Exceptions”</span><br><span class="line">    u4 attribute_length;         // 属性长度</span><br><span class="line">    u2 number_of_exceptions;     // exception_index_table数组长度</span><br><span class="line">    u2 exception_index_table[number_of_exceptions]; // 受检异常类型数组，常量池索引，索引处必须是CONSTANT_Class_info</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">InnerClasses 属性是变长属性，位于 ClassFile 中</span><br><span class="line"></span><br><span class="line">InnerClasses_attribute &#123;</span><br><span class="line">    u2 attribute_name_index;  // 常量池索引，索引处必须是CONSTANT_Utf8_info，用于表示字符串 “InnerClasses”</span><br><span class="line">    u4 attribute_length;      // 属性长度</span><br><span class="line">    u2 number_of_classes;</span><br><span class="line">    &#123;   u2 inner_class_info_index;  // 常量池索引，索引处必须是CONSTANT_Class_info，用于表示内部类或接口</span><br><span class="line">        u2 outer_class_info_index;  // 常量池索引，索引处必须是CONSTANT_Class_info，用于表示所属类或接口</span><br><span class="line">        u2 inner_name_index;        // 常量池索引，索引处必须是CONSTANT_Utf8_info，用于表示内部类名称</span><br><span class="line">        u2 inner_class_access_flags;// 内部类访问标志</span><br><span class="line">    &#125; classes[number_of_classes];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">EnclosingMethod 属性是可选的定长属性，当且仅当匿名类或内部类才有此属性，位于 &#123;@link me.fanwei.fwm.classfile.ClassFile&#125; 中</span><br><span class="line"></span><br><span class="line">EnclosingMethod_attribute &#123;</span><br><span class="line">    u2 attribute_name_index;  // 常量池索引，索引处必须是CONSTANT_Utf8_info，用于表示字符串 “EnclosingMethod”</span><br><span class="line">    u4 attribute_length;      // 固定为4</span><br><span class="line">    u2 class_index;           // 常量池索引，索引处必须是CONSTANT_Class_info，用于表示当前内最内层类</span><br><span class="line">    u2 method_index;          // 如果当前类不是直接包含在某个方法或构造器中，则此字段必须为0，否则常量池索引，索引处必须是CONSTANT_NameAndType_info</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Synthetic 属性是定长属性，是为了支持内部类和接口引入的，类、方法、字段结构都会有</span><br><span class="line"></span><br><span class="line">Synthetic_attribute &#123;</span><br><span class="line">    u2 attribute_name_index;     // 常量池索引，索引处必须是CONSTANT_Utf8_info，用于表示字符串 “Synthetic”</span><br><span class="line">    u4 attribute_length;         // 固定为0</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">Signature 属性是可选的定长属性，位于类、方法、字段中，任何定义了类型或者包含类型参数时，此属性记录泛型信息，有助于实现反射、调试及编译</span><br><span class="line"></span><br><span class="line">Signature_attribute &#123;</span><br><span class="line">    u2 attribute_name_index; // 常量池索引，索引处必须是CONSTANT_Utf8_info，用于表示字符串 “Signature”</span><br><span class="line">    u4 attribute_length;     // 必需为2</span><br><span class="line">    u2 signature_index;      // 常量池索引，索引处必须是CONSTANT_Utf8_info，用于表示类型签名</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">SourceFile_attribute &#123;</span><br><span class="line">    u2 attribute_name_index;</span><br><span class="line">    u4 attribute_length;</span><br><span class="line">    u2 sourcefile_index;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">SourceDebugExtension_attribute 是可选属性，保存类的扩展调试信息， 位于ClassFile中（一个类最多只能包含一个）</span><br><span class="line"></span><br><span class="line">SourceDebugExtension_attribute &#123;</span><br><span class="line">    u2 attribute_name_index;                 // 常量池索引，索引处必须是CONSTANT_Utf8_info，用于表示字符串 “SourceDebugExtension”</span><br><span class="line">    u4 attribute_length;                     //</span><br><span class="line">    u1 debug_extension[attribute_length];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">LineNumberTable 是可选的变长属性表，用于给出源文件中行号所表示的内容，位于code结构中</span><br><span class="line"></span><br><span class="line">LineNumberTable_attribute &#123;</span><br><span class="line">    u2 attribute_name_index;         // 常量池索引，索引处必须是CONSTANT_Utf8_info，用于表示字符串 “LineNumberTable”</span><br><span class="line">    u4 attribute_length;</span><br><span class="line">    u2 line_number_table_length;</span><br><span class="line">    &#123;   u2 start_pc;                 // Code[] 的索引</span><br><span class="line">        u2 line_number;              // 行号</span><br><span class="line">    &#125; line_number_table[line_number_table_length];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">LocalVariableTable 可选变长属性，用于调试器确定变量的值，位于Code属性中</span><br><span class="line"></span><br><span class="line">LocalVariableTable_attribute &#123;</span><br><span class="line">    u2 attribute_name_index;         // 常量池索引，索引处必须是CONSTANT_Utf8_info，用于表示字符串 “LocalVariableTable”</span><br><span class="line">    u4 attribute_length;</span><br><span class="line">    u2 local_variable_table_length;</span><br><span class="line">    &#123;   u2 start_pc;                 // code数组起始位置</span><br><span class="line">        u2 length;                   // 长度</span><br><span class="line">        u2 name_index;               // 常量池索引，索引处必须是CONSTANT_Utf8_info，用于表示局部变量的非限定名</span><br><span class="line">        u2 descriptor_index;         // 当前局部变量在当前栈帧的局部变量的索引</span><br><span class="line">        u2 index;</span><br><span class="line">    &#125; local_variable_table[local_variable_table_length]; // 成员都以偏移量的方式给出code数组中某个范围</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">LocalVariableTypeTable 属性是可选的变长属性，位于code属性中，与AttributeLocalVariableTable类似</span><br><span class="line"></span><br><span class="line">LocalVariableTypeTable_attribute &#123;</span><br><span class="line">    u2 attribute_name_index;             // 常量池索引，索引处必须是CONSTANT_Utf8_info，用于表示字符串 “LocalVariableTypeTable”</span><br><span class="line">    u4 attribute_length;</span><br><span class="line">    u2 local_variable_type_table_length;</span><br><span class="line">    &#123;   u2 start_pc;</span><br><span class="line">        u2 length;</span><br><span class="line">        u2 name_index;</span><br><span class="line">        u2 signature_index;</span><br><span class="line">        u2 index;</span><br><span class="line">    &#125; local_variable_type_table[local_variable_type_table_length];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Deprecated 属性是可选定长属性，位于类、方法、字段的属性表中</span><br><span class="line"></span><br><span class="line">Deprecated_attribute &#123;</span><br><span class="line">    u2 attribute_name_index; // 常量池索引，索引处必须是CONSTANT_Utf8_info，用于表示字符串 “Deprecated”</span><br><span class="line">    u4 attribute_length;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">RuntimeVisibleAnnotations 属性是变长属性，记录运行时注解， 位于类、方法、字段的属性表中，最多只能有一个</span><br><span class="line"></span><br><span class="line">RuntimeVisibleAnnotations_attribute &#123;</span><br><span class="line">    u2         attribute_name_index;         // 常量池索引，索引处必须是CONSTANT_Utf8_info，用于表示字符串 “RuntimeVisibleAnnotations”</span><br><span class="line">    u4         attribute_length;</span><br><span class="line">    u2         num_annotations;</span><br><span class="line">    annotation annotations[num_annotations];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">AnnotationDefault 属性是变长属性，用来表示注解元素的默认值</span><br><span class="line"></span><br><span class="line">AnnotationDefault_attribute &#123;</span><br><span class="line">    u2            attribute_name_index;</span><br><span class="line">    u4            attribute_length;</span><br><span class="line">    element_value default_value;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">BootstrapMethods属性是变长属性，用于保存由invokedynamic指令引用的引导方法限定符，位于类属性表中</span><br><span class="line"></span><br><span class="line">BootstrapMethods_attribute &#123;</span><br><span class="line">    u2 attribute_name_index;     // 常量池索引，索引处必须是CONSTANT_Utf8_info，用于表示字符串 “BootstrapMethods”</span><br><span class="line">    u4 attribute_length;</span><br><span class="line">    u2 num_bootstrap_methods;</span><br><span class="line">    &#123;   u2 bootstrap_method_ref;</span><br><span class="line">        u2 num_bootstrap_arguments;</span><br><span class="line">        u2 bootstrap_arguments[num_bootstrap_arguments];</span><br><span class="line">    &#125; bootstrap_methods[num_bootstrap_methods];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<hr>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">MethodParameters 属性是变长属性，记录形参信息，位于方法属性表中</span><br><span class="line"></span><br><span class="line">MethodParameters_attribute &#123;</span><br><span class="line">    u2 attribute_name_index;         // 常量池索引，索引处必须是CONSTANT_Utf8_info，用于表示字符串 “MethodParameters”</span><br><span class="line">    u4 attribute_length;</span><br><span class="line">    u1 parameters_count;</span><br><span class="line">    &#123;   u2 name_index;</span><br><span class="line">        u2 access_flags;</span><br><span class="line">    &#125; parameters[parameters_count];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="mailto:undefined">maximpler</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="http://maxin.love/2019/11/23/Java/Java 类文件结构/">http://maxin.love/2019/11/23/Java/Java 类文件结构/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://maxin.love" target="_blank">收集时光</a>！</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="../../../../../tags/Java/">Java</a><a class="post-meta__tags" href="../../../../../tags/JVM/">JVM</a><a class="post-meta__tags" href="../../../../../tags/类结构/">类结构</a></div><div class="social-share"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js@1.0.16/dist/css/share.min.css"><script src="https://cdn.jsdelivr.net/npm/social-share.js@1.0.16/dist/js/social-share.min.js"></script><nav id="pagination"><div class="prev-post pull-left"><a href="../../../../12/02/Java/Java 虚拟机类加载机制/"><i class="fa fa-chevron-left">  </i><span>Java 虚拟机类加载机制</span></a></div><div class="next-post pull-right"><a href="../../../../09/17/Java/Java 垃圾收集器/"><span>Java 垃圾收集器</span><i class="fa fa-chevron-right"></i></a></div></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: 'a60bfbc0e0c44f32e590',
+  clientSecret: '4f9c97cb756e7a39b6489738ad3dbfdc0a81065f',
+  repo: 'gitalk',
+  owner: 'iisimpler',
+  admin: 'iisimpler',
+  id: md5(decodeURI(location.pathname)),
+  language: 'zh-CN'
+})
+gitalk.render('gitalk-container')</script></div></div><footer><div class="layout" id="footer"><div class="copyright">&copy;2019 - 2020 By maximpler</div><div class="framework-info"><span>驱动 - </span><a href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>主题 - </span><a href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Hi, welcome to my <a href="https://molunerfinn.com">blog</a>!</div><div class="busuanzi"><script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file-o"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="../../../../../js/third-party/anime.min.js"></script><script src="../../../../../js/third-party/jquery.min.js"></script><script src="../../../../../js/third-party/jquery.fancybox.min.js"></script><script src="../../../../../js/third-party/velocity.min.js"></script><script src="../../../../../js/third-party/velocity.ui.min.js"></script><script src="../../../../../js/utils.js?version=1.5.6"></script><script src="../../../../../js/fancybox.js?version=1.5.6"></script><script src="../../../../../js/sidebar.js?version=1.5.6"></script><script src="../../../../../js/copy.js?version=1.5.6"></script><script src="../../../../../js/fireworks.js?version=1.5.6"></script><script src="../../../../../js/transition.js?version=1.5.6"></script><script src="../../../../../js/scroll.js?version=1.5.6"></script><script src="../../../../../js/head.js?version=1.5.6"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script src="../../../../../js/search/local-search.js"></script><div class="search-dialog" id="local-search"><div class="search-dialog__title" id="local-search-title">本地搜索</div><div id="local-input-panel"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章"></div></div></div><hr><div id="local-search-results"><div id="local-hits"></div><div id="local-stats"><div class="local-search-stats__hr" id="hr"><span>由</span> <a href="https://github.com/wzpan/hexo-generator-search" style="color:#49B1F5;">hexo-generator-search</a>
+ <span>提供支持</span></div></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>

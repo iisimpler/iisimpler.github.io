@@ -1,0 +1,91 @@
+<!DOCTYPE html><html lang="zh-Hans"><head><meta name="generator" content="Hexo 3.9.0"><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"><meta name="description" content="Java 数据区域"><meta name="keywords" content="Java,JVM,内存模型"><meta name="author" content="maximpler,undefined"><meta name="copyright" content="maximpler"><title>Java 数据区域 | 收集时光</title><link rel="shortcut icon" href="../../../../../assets/favicon.ico"><link rel="stylesheet" href="../../../../../css/index.css?version=1.5.6"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css?version=1.5.6"><link rel="dns-prefetch" href="https://cdn.staticfile.org"><link rel="dns-prefetch" href="https://cdn.bootcss.com"><link rel="dns-prefetch" href="https://creativecommons.org"><link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/gitalk/dist/gitalk.min.css"><script src="https://cdn.jsdelivr.net/gh/upupming/gitalk@36368e5dffd049e956cdbbd751ff96c28d8255cf/dist/gitalk.min.js"></script><script src="https://cdn.jsdelivr.net/npm/blueimp-md5@2.10.0/js/md5.min.js"></script><link rel="dns-prefetch" href="https://hm.baidu.com"><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?f42ff98225cab676fe8be6ed53119c03";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();</script><link rel="dns-prefetch" href="https://www.google-analytics.com"><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-131733576-1', 'auto');
+ga('send', 'pageview');</script><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"search.xml","languages":{"hits_empty":"找不到您查询的内容:${query}"}},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  }
+} </script></head><body><canvas class="fireworks"></canvas><i class="fa fa-arrow-right" id="toggle-sidebar" aria-hidden="true"></i><div id="sidebar"><div class="toggle-sidebar-info text-center"><span data-toggle="切换文章详情">切换站点概览</span><hr></div><div class="sidebar-toc"><div class="sidebar-toc__title">目录</div><div class="sidebar-toc__progress"><span class="progress-notice">你已经读了</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar"></div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Java-数据区域"><span class="toc-number">1.</span> <span class="toc-text">Java 数据区域</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#运行时数据区域"><span class="toc-number">1.1.</span> <span class="toc-text">运行时数据区域</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#程序计数器"><span class="toc-number">1.1.1.</span> <span class="toc-text">程序计数器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Java-虚拟机栈"><span class="toc-number">1.1.2.</span> <span class="toc-text">Java 虚拟机栈</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#本地方法栈"><span class="toc-number">1.1.3.</span> <span class="toc-text">本地方法栈</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Java-堆"><span class="toc-number">1.1.4.</span> <span class="toc-text">Java 堆</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#方法区"><span class="toc-number">1.1.5.</span> <span class="toc-text">方法区</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#运行时常量池"><span class="toc-number">1.1.6.</span> <span class="toc-text">运行时常量池</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#直接内存"><span class="toc-number">1.1.7.</span> <span class="toc-text">直接内存</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#对象分配"><span class="toc-number">1.2.</span> <span class="toc-text">对象分配</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#加载"><span class="toc-number">1.2.1.</span> <span class="toc-text">加载</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#分配内存"><span class="toc-number">1.2.2.</span> <span class="toc-text">分配内存</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#初始化"><span class="toc-number">1.2.3.</span> <span class="toc-text">初始化</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#对象的内存布局"><span class="toc-number">1.3.</span> <span class="toc-text">对象的内存布局</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#对象头（Header）"><span class="toc-number">1.3.1.</span> <span class="toc-text">对象头（Header）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#实例数据（Instance-Data）"><span class="toc-number">1.3.2.</span> <span class="toc-text">实例数据（Instance Data）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#对齐填充（Padding）"><span class="toc-number">1.3.3.</span> <span class="toc-text">对齐填充（Padding）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#对象的访问定位"><span class="toc-number">1.4.</span> <span class="toc-text">对象的访问定位</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#参考"><span class="toc-number">1.5.</span> <span class="toc-text">参考</span></a></li></ol></li></ol></div></div><div class="author-info hide"><div class="author-info__avatar text-center"><img src="/assets/avatar.png"></div><div class="author-info__name text-center">maximpler</div><div class="author-info__description text-center"></div><div class="follow-button"><a href="https://github.com/iisimpler" target="_blank">Follow Me</a></div><hr><div class="author-info-articles"><a class="author-info-articles__archives article-meta" href="../../../../../archives"><span class="pull-left">文章</span><span class="pull-right">13</span></a><a class="author-info-articles__tags article-meta" href="../../../../../tags"><span class="pull-left">标签</span><span class="pull-right">27</span></a><a class="author-info-articles__categories article-meta" href="../../../../../categories"><span class="pull-left">分类</span><span class="pull-right">6</span></a></div></div></div><div id="content-outer"><div class="no-bg" id="top-container" style="background-image: url(true)"><div id="page-header"><span class="pull-left"> <a id="site-name" href="../../../../../index.html">收集时光</a></span><i class="fa fa-bars toggle-menu pull-right" aria-hidden="true"></i><span class="pull-right menus"><a class="site-page social-icon search"><i class="fa fa-search"></i><span> 搜索</span></a><a class="site-page" href="/">主页</a><a class="site-page" href="/archives">总览</a><a class="site-page" href="/tags">标签</a><a class="site-page" href="/categories">分类</a><a class="site-page" href="/slides">幻灯片</a><a class="site-page" href="/gallery">相册</a></span></div><div id="post-info"><div id="post-title">Java 数据区域</div><div id="post-meta"><time class="post-meta__date"><i class="fa fa-calendar" aria-hidden="true"></i> 2019-09-15</time><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="../../../../../categories/Java/">Java</a><div class="post-meta-wordcount"><span>字数总计: </span><span class="word-count">1.8k</span><span class="post-meta__separator">|</span><span>阅读时长: 5 分钟</span></div></div></div></div><div class="layout" id="content-inner"><article id="post"><div class="article-container" id="post-content"><h1 id="Java-数据区域"><a href="#Java-数据区域" class="headerlink" title="Java 数据区域"></a>Java 数据区域</h1><blockquote>
+<p>Java 与 C++ 之间有一堵由内存动态分配和垃圾收集技术所围成的“高墙”，墙外面的人想进去，墙里面的人却想出来。</p>
+</blockquote>
+<h2 id="运行时数据区域"><a href="#运行时数据区域" class="headerlink" title="运行时数据区域"></a>运行时数据区域</h2><p><img src="/2019/09/15/Java/Java 数据区域/运行时数据区域.png" alt="运行时数据区域"></p>
+<h3 id="程序计数器"><a href="#程序计数器" class="headerlink" title="程序计数器"></a>程序计数器</h3><p>程序计数器（Program Counter Regiter）是线程私有的一块较小的内存空间，在虚拟机的概念模型中用于选取下一条需要执行的指令，完成分支、循环、跳转、异常处理、线程恢复等基础功能（线程切换时需要保存位置），可以看作是当前线程所执行的字节码的行号指示器。该区域无 OOM 情况。</p>
+<h3 id="Java-虚拟机栈"><a href="#Java-虚拟机栈" class="headerlink" title="Java 虚拟机栈"></a>Java 虚拟机栈</h3><p>Java 虚拟机栈（Java Virtual Machine Stacks）是线程私有的 Java 方法执行的内存区域。每个方法在执行的同时会创建一个栈帧（Stack Frame）用于存储局部变量表、操作数、动态链接、方法出口等信息，这叫入栈；当方法执行完毕后该栈帧出栈。</p>
+<p>局部变量表存放基本数据类型、对象引用和 returnAddress 类型。long 都 double 会占用两个局部变量空间 Slot，其余占用一个 Slot。所需内存空间在编译期间完成确定，运行期间不再改变。</p>
+<p>当线程的栈深度大于虚拟机所允许的深度，将抛出 StackOverflowError；通过 <code>-Xss</code> 设置每个栈大小，如果动态扩展时无法申请足够的内存将抛出 OOM。</p>
+<h3 id="本地方法栈"><a href="#本地方法栈" class="headerlink" title="本地方法栈"></a>本地方法栈</h3><p>本地方法栈（Native Method Stack）与 Java 虚拟机栈类似，Java虚拟机栈为 Java 方法服务，而本地方法中为虚拟机使用到的 Native 方法服务。Sun HotSpot 将此二者合二为一。</p>
+<h3 id="Java-堆"><a href="#Java-堆" class="headerlink" title="Java 堆"></a>Java 堆</h3><p>Java 堆（Java Heap）是 Java 虚拟机中最大的一块内存，用于存放对象实例，被所有线程共享。通过 <code>-Xms -Xmx</code> 指定大小，当无法申请到足够内存时会抛出 <code>java.lang.OutOfMemoryError: Java heap space</code>。</p>
+<h3 id="方法区"><a href="#方法区" class="headerlink" title="方法区"></a>方法区</h3><p>方法区（Method Area，也叫 Non-Heap）也是各个线程共享贡献的内存区域，用于存储已被虚拟机加载的类信息（如类名、访问修饰符、常量池、字段描述、方法描述等）、常量、静态变量、JIT 编译后的代码等数据。当无法申请到足够内存时会抛出 OOM。</p>
+<h3 id="运行时常量池"><a href="#运行时常量池" class="headerlink" title="运行时常量池"></a>运行时常量池</h3><p>运行时常量池（Runtime Constant Pool）是方法区的一部分，用于存放编译期生产的各种字面量和符号引用以及类的直接引用，具备动态性，可在运行期间将新的常量存放入池中。</p>
+<p>Class 文件定义了类的版本、字段、方法、接口、常量池等描述性信息。</p>
+<h3 id="直接内存"><a href="#直接内存" class="headerlink" title="直接内存"></a>直接内存</h3><p>直接内存（Direct Memory）并不是虚拟机运行时数据区的一部分，也不是 Java 虚拟机规范中定义的内存区域，而是 NIO （New Input/Output）类中基于通道（Channel）与缓冲器（Buffer）的 I/O 方式引入用于提高性能。因为它通过 Native 函数库直接分配堆外内存，然后通过存储在 Java 堆中的 DerectByteBuffer 对象引用进行操作，避免了 Java 堆与 Native 堆来回复制数据。可通过 <code>-XX:MaxDirectMemory</code> 指定大小，如果不指定则为 Java 堆的最大值，当无法申请到足够的内存后会抛出 OOM，且在 Heap Dump 中不会看到明显的异常。</p>
+<h2 id="对象分配"><a href="#对象分配" class="headerlink" title="对象分配"></a>对象分配</h2><h3 id="加载"><a href="#加载" class="headerlink" title="加载"></a>加载</h3><p>Sun HotSpot 遇到一条 new 指令时，首先检查常量池中该类的符号引用已经该符号引用是否已被加载、解析和初始化，如果没有则执行类加载过程。</p>
+<h3 id="分配内存"><a href="#分配内存" class="headerlink" title="分配内存"></a>分配内存</h3><p>对象所需内存的大小在类加载完成后便可完全确定，内存分配方式取决于垃圾回收器是否带有压缩整理算法。如果有压缩整理，则采用简单的指针碰撞（Bump the Pointer）；否则就采用空闲列表（Free List）。</p>
+<p>在指针碰撞中为了解决线程安全问题，有两种解决方案。一种是对分配内存空间的动作进行同步处理，虚拟机采用 CAS 保证原子性；另一种是在 Java 堆中为每个线程预置一小块内存，称为本地线程分配缓冲（Thread Local Allocation Buffer， TLAB），每个线程都在自己的 LLAB 中分配对象内存，只有在TLAB 用完后才需要同步锁定。虚拟机是否启用 TLAB，通过 <code>-XX:+/-UseTLAB</code> 参数决定。</p>
+<h3 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h3><p>内存分配完成后，虚拟机将分配的内存空间都初始化为零值（不包括对象头）。接下来将类的元信息、对象的哈希码、对象的 GC 分代年龄等信息存放在对象头（Object Header）中。</p>
+<p>虚拟机的任务完成后，才会按照开发者的意愿进行初始化。</p>
+<h2 id="对象的内存布局"><a href="#对象的内存布局" class="headerlink" title="对象的内存布局"></a>对象的内存布局</h2><p>HotSpot 中，对象在内存中存储的布局分为 3 部分：</p>
+<h3 id="对象头（Header）"><a href="#对象头（Header）" class="headerlink" title="对象头（Header）"></a>对象头（Header）</h3><p>对象头包括两部分信息：</p>
+<ul>
+<li><p>Mark World<br>用于存储对象自身的运行时数据，包括HashCode、GC 分代年龄、锁状态标记、线程持有锁、偏向线程 ID，偏向时间戳等信息，因为已经超过了所能记录的最大限度，故被设计成一个非固定数据结构以便在极小的空间内存储尽量多的信息，可根据对象状态复用存储空间。在 32 位和 64 位虚拟机（未开启压缩指针）中分别为 32 位和 64 位。</p>
+</li>
+<li><p>类型指针<br>存储指向类的元数据的指针。因为虚拟机可通过对象的元数据确定大小，但是数组的元数据中不包含大小的数据，所有需要单独存储数组长度。</p>
+</li>
+</ul>
+<p>并非所有虚拟机都在对象中存储类元信息。</p>
+<h3 id="实例数据（Instance-Data）"><a href="#实例数据（Instance-Data）" class="headerlink" title="实例数据（Instance Data）"></a>实例数据（Instance Data）</h3><p>存储对象字段内容，包括继承字段。存储顺序受虚笔记分配策略参数（FieldsAllocationStyle）和字段定义顺序影响。</p>
+<p>HotSpot 默认分配策略为相同宽度的字段总在一起： longs/doubles, intes, shorts/chars, bytes/booleans, oop(Ordinary Object Pointers)，如果 CompactFileds 参数为 False（默认 True）则父类字段总在子类前面。</p>
+<h3 id="对齐填充（Padding）"><a href="#对齐填充（Padding）" class="headerlink" title="对齐填充（Padding）"></a>对齐填充（Padding）</h3><p>HotSpot 自动内存管理系统要求对象大小必须是 8 自己的整数倍，因为对象头肯定满足此要求，所以当实例数据部分没有对齐时，就需要通过对齐填充来补全。</p>
+<h2 id="对象的访问定位"><a href="#对象的访问定位" class="headerlink" title="对象的访问定位"></a>对象的访问定位</h2><p>Java 程序通过栈上的 reference 数据来操作堆上的具体对象，主流访问方式有两种：</p>
+<ul>
+<li>句柄访问</li>
+</ul>
+<p><img src="/2019/09/15/Java/Java 数据区域/句柄访问.png" alt="句柄访问"></p>
+<p>在 Java 堆中划分出一块内存作为句柄池，reference 存储句柄地址，句柄包括对象地址和类地址。</p>
+<ul>
+<li>直接指针访问<blockquote>
+<p>HotSpot 采用这种方式</p>
+</blockquote>
+</li>
+</ul>
+<p><img src="/2019/09/15/Java/Java 数据区域/直接指针访问.png" alt="直接指针访问"></p>
+<p>reference 直接存储对象地址（Java 堆），对象中存储对象类型数据的指针（方法区）。相比句柄访问节省了一次指针定位的时间开销。</p>
+<h2 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h2><p><a href="https://book.douban.com/subject/24722612/" target="_blank" rel="noopener">《深入理解Java虚拟机——JVM高级特性与最佳实践》－周志明</a></p>
+</div></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="mailto:undefined">maximpler</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="http://maxin.love/2019/09/15/Java/Java 数据区域/">http://maxin.love/2019/09/15/Java/Java 数据区域/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://maxin.love" target="_blank">收集时光</a>！</span></div></div><div class="post-meta__tag-list"><a class="post-meta__tags" href="../../../../../tags/Java/">Java</a><a class="post-meta__tags" href="../../../../../tags/JVM/">JVM</a><a class="post-meta__tags" href="../../../../../tags/内存模型/">内存模型</a></div><div class="social-share"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js@1.0.16/dist/css/share.min.css"><script src="https://cdn.jsdelivr.net/npm/social-share.js@1.0.16/dist/js/social-share.min.js"></script><nav id="pagination"><div class="prev-post pull-left"><a href="../../../16/Java/Java 命令行工具/"><i class="fa fa-chevron-left">  </i><span>Java 命令行工具</span></a></div><div class="next-post pull-right"><a href="../../../12/Java/MacOS 10.14 编译openJDK 8并在 Xcode 10 中调试/"><span>MacOS 10.14 编译openJDK 8并在 Xcode 10 中调试</span><i class="fa fa-chevron-right"></i></a></div></nav><div id="gitalk-container"></div><script>var gitalk = new Gitalk({
+  clientID: 'a60bfbc0e0c44f32e590',
+  clientSecret: '4f9c97cb756e7a39b6489738ad3dbfdc0a81065f',
+  repo: 'gitalk',
+  owner: 'iisimpler',
+  admin: 'iisimpler',
+  id: md5(decodeURI(location.pathname)),
+  language: 'zh-CN'
+})
+gitalk.render('gitalk-container')</script></div></div><footer><div class="layout" id="footer"><div class="copyright">&copy;2019 - 2020 By maximpler</div><div class="framework-info"><span>驱动 - </span><a href="http://hexo.io"><span>Hexo</span></a><span class="footer-separator">|</span><span>主题 - </span><a href="https://github.com/Molunerfinn/hexo-theme-melody"><span>Melody</span></a></div><div class="footer_custom_text">Hi, welcome to my <a href="https://molunerfinn.com">blog</a>!</div><div class="busuanzi"><script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script><span id="busuanzi_container_page_pv"><i class="fa fa-file-o"></i><span id="busuanzi_value_page_pv"></span><span></span></span></div></div></footer><i class="fa fa-arrow-up" id="go-up" aria-hidden="true"></i><script src="../../../../../js/third-party/anime.min.js"></script><script src="../../../../../js/third-party/jquery.min.js"></script><script src="../../../../../js/third-party/jquery.fancybox.min.js"></script><script src="../../../../../js/third-party/velocity.min.js"></script><script src="../../../../../js/third-party/velocity.ui.min.js"></script><script src="../../../../../js/utils.js?version=1.5.6"></script><script src="../../../../../js/fancybox.js?version=1.5.6"></script><script src="../../../../../js/sidebar.js?version=1.5.6"></script><script src="../../../../../js/copy.js?version=1.5.6"></script><script src="../../../../../js/fireworks.js?version=1.5.6"></script><script src="../../../../../js/transition.js?version=1.5.6"></script><script src="../../../../../js/scroll.js?version=1.5.6"></script><script src="../../../../../js/head.js?version=1.5.6"></script><script type="text/x-mathjax-config">MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [ ['$','$'], ["\\(","\\)"]  ],
+    processEscapes: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+  }
+});
+</script><script type="text/x-mathjax-config">MathJax.Hub.Queue(function() {
+  var all = MathJax.Hub.getAllJax(), i;
+  for (i=0; i < all.length; i += 1) {
+    all[i].SourceElement().parentNode.className += ' has-jax';
+  }
+});
+</script><script src="https://cdn.jsdelivr.net/npm/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script><script src="../../../../../js/search/local-search.js"></script><div class="search-dialog" id="local-search"><div class="search-dialog__title" id="local-search-title">本地搜索</div><div id="local-input-panel"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章"></div></div></div><hr><div id="local-search-results"><div id="local-hits"></div><div id="local-stats"><div class="local-search-stats__hr" id="hr"><span>由</span> <a href="https://github.com/wzpan/hexo-generator-search" style="color:#49B1F5;">hexo-generator-search</a>
+ <span>提供支持</span></div></div></div><span class="search-close-button"><i class="fa fa-times"></i></span></div><div class="search-mask"></div></body></html>
