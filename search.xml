@@ -231,9 +231,9 @@
             
             <tag> Java </tag>
             
-            <tag> 虚拟机 </tag>
-            
             <tag> 历史 </tag>
+            
+            <tag> 虚拟机 </tag>
             
         </tags>
       
@@ -386,17 +386,6 @@
     
     
     <entry>
-      <title>分类</title>
-      <link href="/categories/index.html"/>
-      <url>/categories/index.html</url>
-      
-        <content type="html"><![CDATA[]]></content>
-      
-    </entry>
-    
-    
-    
-    <entry>
       <title>相册</title>
       <link href="/gallery/index.html"/>
       <url>/gallery/index.html</url>
@@ -411,6 +400,17 @@
       <title>幻灯片</title>
       <link href="/slides/index.html"/>
       <url>/slides/index.html</url>
+      
+        <content type="html"><![CDATA[]]></content>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>分类</title>
+      <link href="/categories/index.html"/>
+      <url>/categories/index.html</url>
       
         <content type="html"><![CDATA[]]></content>
       
